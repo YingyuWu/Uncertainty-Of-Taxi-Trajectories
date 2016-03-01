@@ -4,6 +4,8 @@
 var dataset = [
 {
     "time": "2011-01-01T00-00-00",
+    "maxSD": 50,
+    "minSD": 10,
     "nodes": {
       "3382": {
         "speed": 36.572, 
