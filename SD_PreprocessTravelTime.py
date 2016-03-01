@@ -29,9 +29,9 @@ import math
 import datetime
 import json
 
-TEST = True
+TEST = False
 # Json Filename
-JsonFileName = "jsonOutput.json"
+JsonFileName = "20111206_1hour.json"
 
 
 for frafra in range(6, 7):
@@ -204,11 +204,11 @@ for frafra in range(6, 7):
     sTmpFiles = os.listdir(sTmpDir)
     sTmpFiles.sort()
     
-    jsonFile = open(JsonFileName)
-    jsonData = {}
+    jsonFile = open(JsonFileName,'w')
+    jsonData = []
     
     for sTmpFile in sTmpFiles:
-        jsonData[sTmpFile] = {}
+       jsonData.append({"time": sTmpFile, "nodes":{} })
        # Create a new dictionary for this time segment.
        data = {}
 
@@ -372,6 +372,12 @@ for frafra in range(6, 7):
                tempTravelTime /= tempSpeed
 
            outFile_node.write("%s %f %f %d %f\n" % (key, tempTravelTime, tempSpeed, value[0], stdDev))  # average travel time of "key" road segment, speed, flow;
+           jsonData[-1]["nodes"][str(key)] = {"speed": tempSpeed,
+                                              "flow": value[0],
+                                              "travelTime": tempTravelTime,
+                                              "distance": float(road[key][0]),
+                                              "SD": stdDev
+                                              }
        '''
        #for key, value in my_edges.items():
        print("Outputing edge with flow....")
@@ -395,6 +401,9 @@ for frafra in range(6, 7):
        print(" %s edges filtered by time threshold." % (numberOfTimeThreshold))
        print("   Total taxis  : %d" % (nTaxiProcessed))
        print("   Total points : %d" % (nRecProcessed))
+       
+    #Write to json file
+    jsonFile.write(json.dumps(jsonData, indent=4, sort_keys=False))
 
 
     end_time = datetime.datetime.now();

@@ -16,5 +16,5 @@ var dataset = [
     }
 ` },
   ... Another TimePeriod
-  ]
+]
 
