@@ -12,6 +12,7 @@ var dataset = {
          "flow": 5, 
          "travelTime": 0.003478, 
          "distance": 0.127192600836835
+         "SD": 2.11
       },
       ... Another Node
     }

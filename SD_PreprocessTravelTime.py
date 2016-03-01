@@ -30,6 +30,8 @@ import datetime
 import json
 
 TEST = True
+# Json Filename
+JsonFileName = "jsonOutput.json"
 
 
 for frafra in range(6, 7):
@@ -201,8 +203,12 @@ for frafra in range(6, 7):
     # sorted data is also output in the format for the TMT utility.
     sTmpFiles = os.listdir(sTmpDir)
     sTmpFiles.sort()
+    
+    jsonFile = open(JsonFileName)
+    jsonData = {}
+    
     for sTmpFile in sTmpFiles:
-
+        jsonData[sTmpFile] = {}
        # Create a new dictionary for this time segment.
        data = {}
 
