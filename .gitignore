@@ -2,6 +2,7 @@
 ###
 *.txt
 road_distance_info/
+data/
 
 # Emacs generated files
 ##########
