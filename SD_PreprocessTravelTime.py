@@ -29,9 +29,9 @@ import math
 import datetime
 import json
 
-TEST = False
+TEST = True
 # Json Filename
-JsonFileName = "20111206_1hour.json"
+JsonFileName = "First50000_20111206_1hour.json"
 
 
 for frafra in range(6, 7):
@@ -209,6 +209,8 @@ for frafra in range(6, 7):
     
     for sTmpFile in sTmpFiles:
        jsonData.append({"time": sTmpFile, "nodes":{} })
+       maxSD = 0
+       minSD = 0
        # Create a new dictionary for this time segment.
        data = {}
 
@@ -378,6 +380,8 @@ for frafra in range(6, 7):
                                               "distance": float(road[key][0]),
                                               "SD": stdDev
                                               }
+           if stdDev > maxSD: maxSD = stdDev 
+           if stdDev < minSD: minSD = stdDev
        '''
        #for key, value in my_edges.items():
        print("Outputing edge with flow....")
@@ -391,6 +395,9 @@ for frafra in range(6, 7):
 
        outFile_node.close()
        outFile_edge.close()
+       
+       jsonData[-1]["maxSD"] = maxSD
+       jsonData[-1]["minSD"] = minSD
 
 
        print("Betweenness centrolity graph generation done....")
@@ -403,6 +410,7 @@ for frafra in range(6, 7):
        print("   Total points : %d" % (nRecProcessed))
        
     #Write to json file
+    jsonFile.write("var dataset = ")
     jsonFile.write(json.dumps(jsonData, indent=4, sort_keys=False))
 
 
