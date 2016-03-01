@@ -1,11 +1,9 @@
 #Edit Time: 03/01/2016 04:25pm
 
 
-var dataset = {
-"data": [
-  {
-    "date": "2011-01-01",
-    "time": "00-00-00",
+var dataset = [
+{
+    "time": "2011-01-01T00-00-00",
     "nodes": {
       "3382": {
         "speed": 36.572, 
@@ -18,7 +16,5 @@ var dataset = {
     }
 ` },
   ... Another TimePeriod
-],
-"timeRange": 1,
-"timeUnit": "hour"/"day"/"week"/"month"
-}
+  ]
+
