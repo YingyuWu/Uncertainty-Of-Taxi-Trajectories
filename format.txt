@@ -1,33 +1,20 @@
-var dataset = [
-{
-  "nodes": [
-    [
-      "3382", 
-      {
+var dataset = {
+"data": [
+  {
+    "date": "2011-01-01",
+    "time": "00-00-00",
+    "nodes": {
+      "3382": {
         "speed": 36.572, 
-        "flow": 5, 
-        "travelTime": 0.003478, 
-        "distance": 0.127192600836835
-      }
-    ], 
-    [
-      "13356", 
-      {
-        "speed": 20.0, 
-        "flow": 1, 
-        "travelTime": 0.000306, 
-        "distance": 0.00611717951571023
-        "SD" : .....
-      }
-    ] 
-},//first day
-{},
-{},
-]
-
-
-
-
-
-
-]
+         "flow": 5, 
+         "travelTime": 0.003478, 
+         "distance": 0.127192600836835
+      },
+      ... Another Node
+    }
+` },
+  ... Another TimePeriod
+],
+"timeRange": 1,
+"timeUnit": "hour"/"day"/"week"/"month"
+}
