@@ -29,9 +29,9 @@ import math
 import datetime
 import json
 
-TEST = True
+TEST = False
 # Json Filename
-JsonFileName = "First50000_20111206_1hour.json"
+JsonFileName = "20111206_1hour.json"
 
 
 for frafra in range(6, 7):
