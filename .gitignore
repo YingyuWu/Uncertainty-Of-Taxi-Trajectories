@@ -2,6 +2,12 @@
 ###
 road_distance_info/
 data/
+*.csv
+outputTry/
+
+# LiClipse Project file
+.project
+.pydevproject
 
 # Emacs generated files
 ##########
