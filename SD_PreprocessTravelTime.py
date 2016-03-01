@@ -24,7 +24,7 @@ import shutil
 import codecs
 import sys
 import Utils
-#import PageRank
+# import PageRank
 import math
 import datetime
 import json
@@ -32,7 +32,7 @@ import json
 TEST = True
 
 
-for frafra in range(6,7):
+for frafra in range(6, 7):
     start_time = datetime.datetime.now()
     # -----------------------------------------------------------------------------
     # Main() start here
@@ -86,8 +86,8 @@ for frafra in range(6,7):
     tx = latitudeRange[1] - latitudeRange[0]
     ty = longitudeRange[1] - longitudeRange[0]'''
 
-    distanceThreshold = 900 # * math.sqrt(tx * tx + ty * ty) * 1e4;
-    timeThreshold = 90; # second
+    distanceThreshold = 900  # * math.sqrt(tx * tx + ty * ty) * 1e4;
+    timeThreshold = 90;  # second
     numberOfThreshold = 0;
     numberOfTimeThreshold = 0;
 
@@ -103,7 +103,7 @@ for frafra in range(6,7):
     for line in roadFile:
         line = line.strip()
         item = line.split(' ')
-        #the following condition added by farah
+        # the following condition added by farah
         '''if item[0] not in selectedroads:
             continue'''
         road[item[0]] = [item[1], item[2], item[3]];
@@ -112,14 +112,14 @@ for frafra in range(6,7):
 
 
     # Verify the options are valid.
-    #options.inputFile = "./smallInput"
-    #options.inputFile = "c:/2012-06-27.good"
-    #options.inputFile = "C://HangZhou_Work/Hnewformat/Data2-"+str()+".txt"
+    # options.inputFile = "./smallInput"
+    # options.inputFile = "c:/2012-06-27.good"
+    # options.inputFile = "C://HangZhou_Work/Hnewformat/Data2-"+str()+".txt"
 
-    options.inputFile = "./data/Data2-"+str(frafra)+".txt"
-    options.duration = "3600" # 7200 = 2 hours. 86400 = 24 hours;
-    #options.outputDir = "./rawGraph_24hours_90second _one_month/"+str(frafra)+"/"
-    options.outputDir = "./outputTry/"+str(frafra)+"/"
+    options.inputFile = "./data/Data2-" + str(frafra) + ".txt"
+    options.duration = "3600"  # 7200 = 2 hours. 86400 = 24 hours;
+    # options.outputDir = "./rawGraph_24hours_90second _one_month/"+str(frafra)+"/"
+    options.outputDir = "./outputTry/" + str(frafra) + "/"
     options.bFilterRepeats = True
     options.bAugmentSpeed = False
 
@@ -132,10 +132,10 @@ for frafra in range(6,7):
 
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    nProgressInc = 50000 # number of records to process before print an indication
-    nRecProcessed = 0     # Total number of records in the input file
-    nRecKept = 0     # Total number of records used in the output
-    data = {}    # Dictionary mapping time segment to taxi
+    nProgressInc = 50000  # number of records to process before print an indication
+    nRecProcessed = 0  # Total number of records in the input file
+    nRecKept = 0  # Total number of records used in the output
+    data = {}  # Dictionary mapping time segment to taxi
 
     # Temp directory for intermediate files.
     sTmpDir = tempfile.mkdtemp(".taxivis")
@@ -146,7 +146,7 @@ for frafra in range(6,7):
     # processing.
     for line in inFile:
 
-       # Track the number of records that were processed from the file
+        # Track the number of records that were processed from the file
        nRecProcessed += 1
 
        # Strip the whitespace from either side of the line
@@ -168,7 +168,7 @@ for frafra in range(6,7):
        timeStart = int(csv[Utils.iTime] / timeIncrement)
        if not timeStart in data:
           sTime = time.strftime(Utils.sTimeFormatOut, time.gmtime(timeStart * timeIncrement))
-          data[timeStart] = open("%s/%s" % (sTmpDir,sTime), 'w')
+          data[timeStart] = open("%s/%s" % (sTmpDir, sTime), 'w')
           print("Starting new time slot: %s" % sTime)
 
        # If the option to only process points for a loaded taxi is set or if
@@ -176,11 +176,11 @@ for frafra in range(6,7):
        # the output file.
           # Append the new point to the end of the taxis list
        data[timeStart].write("%s,%s,%s,%s,%s\n" % \
-             (csv[Utils.iPlate],csv[Utils.iTime],csv[Utils.iRId],csv[Utils.iLoad],csv[Utils.iSpd]))
+             (csv[Utils.iPlate], csv[Utils.iTime], csv[Utils.iRId], csv[Utils.iLoad], csv[Utils.iSpd]))
 
        # DEBUG: Process a subset of the total over all points.  Just makes
        #        it faster to test during development.
-       if Test and nRecProcessed > 500000:
+       if TEST and nRecProcessed > 500000:
           break
 
     # Close all the individual output files
@@ -208,11 +208,11 @@ for frafra in range(6,7):
 
        # Sort the data so that the taxis are sorted by plate.
        # Update: This isn't required.
-       #timeVal = sorted( timeVal, key=lambda record: record[Utils.iPlate] )
+       # timeVal = sorted( timeVal, key=lambda record: record[Utils.iPlate] )
 
        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        # Open up the input file from the temporary location.
-       inFile = open("%s/%s" % (sTmpDir,sTmpFile), 'r')
+       inFile = open("%s/%s" % (sTmpDir, sTmpFile), 'r')
 
        # Parse out the input file
        for line in inFile:
@@ -250,14 +250,14 @@ for frafra in range(6,7):
        
        for taxiKey, taxiVal in data.items():
 
-          #if not nTaxiProcessed % 10000:
+          # if not nTaxiProcessed % 10000:
           #    print("#", end='')
-          #if not nTaxiProcessed % 200000:
+          # if not nTaxiProcessed % 200000:
           #    print("\n", end='')
           
-          #taxiVal = [['B51C92', '1340755223', '42114', 'False', '0'], ['B51C92', '1340755254', '42114', 'False', '0']]
+          # taxiVal = [['B51C92', '1340755223', '42114', 'False', '0'], ['B51C92', '1340755254', '42114', 'False', '0']]
           # 0 : car plate; 1: time by second; 2 : roadID; 3: loaded; 4: speed
-          #sort trajactory by time
+          # sort trajactory by time
 
           taxiVal = sorted(taxiVal, key=lambda item: item[1], reverse=False)
             
@@ -281,7 +281,7 @@ for frafra in range(6,7):
                 if float(road[point[2]][0]) == 0.0:
                     continue;
 
-                #if not bool(point[3]): # Filter the taix without customer.
+                # if not bool(point[3]): # Filter the taix without customer.
                 #    continue;
 
                 lastRoadId = point[2]
@@ -299,7 +299,7 @@ for frafra in range(6,7):
                    nInsertions = int(nSpd / nSpdBucketRange) - 1
                    for i in range(nInsertions):
                       outFile.write("%s " % (point[2]))
-                      #print( "Zoom-Zoom(%d)!  %d" % (i,nSpd) )
+                      # print( "Zoom-Zoom(%d)!  %d" % (i,nSpd) )
 
                 tempTrajectory.append(point)
                 tempSpeed.append(nSpd)
@@ -313,7 +313,7 @@ for frafra in range(6,7):
                   sourceID = item[2]
                   targetID = tempTrajectory[i + 1][2]
 
-                  if (Utils.distance([[float(road[sourceID][1]),float(road[sourceID][1])],[float(road[targetID][1]),float(road[targetID][1])]]) > distanceThreshold):
+                  if (Utils.distance([[float(road[sourceID][1]), float(road[sourceID][1])], [float(road[targetID][1]), float(road[targetID][1])]]) > distanceThreshold):
                       numberOfThreshold += 1;
                       continue;
 
@@ -329,22 +329,22 @@ for frafra in range(6,7):
           else:
               pass
 
-          #TODO : Sum node total speed;
+          # TODO : Sum node total speed;
           for i, item in enumerate(tempTrajectory):
               if item[2] not in my_node:
                   # Cheng modified
-                  my_node[item[2]] = [1, float(item[4]), [float(item[4])] ] ## 0 : car plate; 1: time by second; 2 : roadID; 3: loaded; 4: speed
+                  my_node[item[2]] = [1, float(item[4]), [float(item[4])] ]  # # 0 : car plate; 1: time by second; 2 : roadID; 3: loaded; 4: speed
                   
               else:
                   my_node[item[2]][0] += 1
                   my_node[item[2]][1] += float(item[4])
                   # Cheng modified
-                  my_node[item[2]][2].append(float(item[4]) )
+                  my_node[item[2]][2].append(float(item[4]))
 
-          #END of the content of one taxi trajactory
+          # END of the content of one taxi trajactory
           pass
 
-       #calculate average travel time of each node.
+       # calculate average travel time of each node.
        print("Outputing node with average travel time, speed ,and flow....")
        for key, value in my_node.items():
            if key not in road:
@@ -358,14 +358,14 @@ for frafra in range(6,7):
            else:
                tempSpeed = tempSpeed / value[0]
                # Cheng modified calculate standard deviation
-               stdDev = (sum([(sp - tempSpeed)**2 for sp in value[2]]) / float(value[0]) ) ** 0.5
+               stdDev = (sum([(sp - tempSpeed) ** 2 for sp in value[2]]) / float(value[0])) ** 0.5
 
            
            tempTravelTime = float(road[key][0])
            if tempSpeed != 0:
                tempTravelTime /= tempSpeed
 
-           outFile_node.write("%s %f %f %d %f\n" % (key, tempTravelTime, tempSpeed, value[0], stdDev)) # average travel time of "key" road segment, speed, flow;
+           outFile_node.write("%s %f %f %d %f\n" % (key, tempTravelTime, tempSpeed, value[0], stdDev))  # average travel time of "key" road segment, speed, flow;
        '''
        #for key, value in my_edges.items():
        print("Outputing edge with flow....")
@@ -392,9 +392,9 @@ for frafra in range(6,7):
 
 
     end_time = datetime.datetime.now();
-    print("DONE by %f s" % ((end_time-start_time).total_seconds()));
+    print("DONE by %f s" % ((end_time - start_time).total_seconds()));
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Clean up the temp directory
-    #print( "Temp directory at %s" % (sTmpDir) )
+    # print( "Temp directory at %s" % (sTmpDir) )
     shutil.rmtree(sTmpDir, True)
 
