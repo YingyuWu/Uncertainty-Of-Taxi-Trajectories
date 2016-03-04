@@ -6,17 +6,16 @@
 [
     {
         "time": "2011-01-01T00-00-00",
-        "maxSD": 50,
-        "minSD": 10,
-        "maxSpeed":100,
-        "minSpeed":10,
         "nodes": {
           "3382": {
             "speed": 36.572, 
+            "maxSpeed":100,
+            "minSpeed":10,
              "flow": 5, 
              "travelTime": 0.003478, 
              "distance": 0.127192600836835
              "SD": 2.11
+             "SDwidth": 1-10
           },
           ... Another Node
         }
