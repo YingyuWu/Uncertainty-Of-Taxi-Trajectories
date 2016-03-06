@@ -4,6 +4,7 @@ road_distance_info/
 data/
 *.csv
 outputTry/
+output/
 
 # LiClipse Project file
 .project
