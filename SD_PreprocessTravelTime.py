@@ -29,10 +29,8 @@ import datetime
 import json
 
 TEST = False
-# Json Filename
-JsonFileName = "20111206_1hour.json"
 
-for frafra in range(6, 7):
+for frafra in range(3, 32):
     start_time = datetime.datetime.now()
     # Process the command line inputs
     roadFile = codecs.open("./road_distance_info/road_info", 'r', encoding="utf_8")
@@ -43,7 +41,6 @@ for frafra in range(6, 7):
     numberOfTimeThreshold = 0;
 
     road = {}
-
     for line in roadFile:
         line = line.strip()
         item = line.split(' ')
@@ -53,7 +50,7 @@ for frafra in range(6, 7):
 
     inputFile = "./data/Data2-" + str(frafra) + ".txt"
     duration = "3600"  # 7200 = 2 hours. 86400 = 24 hours;
-    outputDir = "./outputTry/" + str(frafra) + "/"
+    outputDir = "./output/" + str(frafra) + "/"
     bFilterRepeats = True
     bAugmentSpeed = False
 
@@ -97,9 +94,17 @@ for frafra in range(6, 7):
         # the point corresponds to a loaded value then output the value to
         # the output file.
         # Append the new point to the end of the taxis list
-        data[timeStart].write("%s,%s,%s,%s,%s\n" % \
+        try:
+            data[timeStart].write("%s,%s,%s,%s,%s\n" % \
                  (csv[Utils.iPlate], csv[Utils.iTime], csv[Utils.iRId], csv[Utils.iLoad], csv[Utils.iSpd]))
-
+        except UnicodeEncodeError:
+            print "----- UnicodeEncodeError Happend ---"
+            data[timeStart].write("%s,%s,%s,%s,%s\n" % \
+                 (csv[Utils.iPlate].encode("utf-8"), csv[Utils.iTime], 
+                  csv[Utils.iRId].encode("utf-8"), 
+                  csv[Utils.iLoad].encode("utf-8"), 
+                  csv[Utils.iSpd].encode("utf-8")))
+            
         # DEBUG: Process a subset of the total over all points.  Just makes
         #         it faster to test during development.
         if TEST and nRecProcessed > 500000:
@@ -109,13 +114,11 @@ for frafra in range(6, 7):
     for tmpFile in data.values():
         tmpFile.close()
 
-
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Print some status
     print("Records processed : %d" % (nRecProcessed))
     print("Records kept      : %d" % (nRecKept))
     print("Finished reading input file.  Processing output")
-
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Sort the cached data.  At this point the data has been grouped into its
@@ -124,19 +127,9 @@ for frafra in range(6, 7):
     sTmpFiles = os.listdir(sTmpDir)
     sTmpFiles.sort()
     
-    jsonFile = open(JsonFileName,'w')
-    jsonData = []
-    
     for sTmpFile in sTmpFiles:
-        jsonData.append({"time": sTmpFile, "nodes":{} })
-        maxSD = 0
-        minSD = 0
         # Create a new dictionary for this time segment.
         data = {}
-
-        # Sort the data so that the taxis are sorted by plate.
-        # Update: This isn't required.
-        # timeVal = sorted( timeVal, key=lambda record: record[Utils.iPlate] )
 
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         # Open up the input file from the temporary location.
@@ -153,7 +146,6 @@ for frafra in range(6, 7):
                 data[csv[0]] = []
             # Add the point onto the end of the taxi's list
             data[csv[0]].append(csv)
-
 
         # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         # Open up the output file for this time slot.
@@ -172,16 +164,6 @@ for frafra in range(6, 7):
         nRecProcessed = 0
         
         for taxiKey, taxiVal in data.items():
-
-            # if not nTaxiProcessed % 10000:
-            #    print("#", end='')
-            # if not nTaxiProcessed % 200000:
-            #    print("\n", end='')
-            
-            # taxiVal = [['B51C92', '1340755223', '42114', 'False', '0'], ['B51C92', '1340755254', '42114', 'False', '0']]
-            # 0 : car plate; 1: time by second; 2 : roadID; 3: loaded; 4: speed
-            # sort trajactory by time
-
             taxiVal = sorted(taxiVal, key=lambda item: item[1], reverse=False)
               
             tempTrajectory = []
@@ -217,12 +199,11 @@ for frafra in range(6, 7):
                         for i in range(nInsertions):
                             outFile.write("%s " % (point[2]))
                             # print( "Zoom-Zoom(%d)!  %d" % (i,nSpd) )
-                        tempTrajectory.append(point)
+                    tempTrajectory.append(point)
                     tempSpeed.append(nSpd)
                     # Track how many records are processed in total
                     nRecProcessed += 1
             
-
             # TODO : Sum edges flow.
             if len(tempTrajectory) > 1:
                 for i, item in enumerate(tempTrajectory[0:-1]):
@@ -246,62 +227,32 @@ for frafra in range(6, 7):
             # TODO : Sum node total speed;
             for i, item in enumerate(tempTrajectory):
                 if item[2] not in my_node:
-                    # Cheng modified
-                    my_node[item[2]] = [1, float(item[4]), [float(item[4])] ]  # # 0 : car plate; 1: time by second; 2 : roadID; 3: loaded; 4: speed
+                    my_node[item[2]] = [float(item[4])]
                 else:
-                    my_node[item[2]][0] += 1
-                    my_node[item[2]][1] += float(item[4])
-                    # Cheng modified
-                    my_node[item[2]][2].append(float(item[4]))
+                    my_node[item[2]].append(float(item[4]))
 
             # END of the content of one taxi trajactory
             pass
 
         # calculate average travel time of each node.
-        print("Outputing node with average travel time, speed ,and flow....")
         for key, value in my_node.items():
             if key not in road:
                 road[key] = [0.0, 0.0, 0.0]
                 print(key + "is not in road")
-            tempSpeed = value[1];
-            if value[0] == 0:
-                tempSpeed = 0;
-            else:
-                tempSpeed = tempSpeed / value[0]
-                # Cheng modified calculate standard deviation
-                stdDev = (sum([(sp - tempSpeed) ** 2 for sp in value[2]]) / float(value[0])) ** 0.5
-            tempTravelTime = float(road[key][0])
-            if tempSpeed != 0:
-                tempTravelTime /= tempSpeed
-            outFile_node.write("%s %f %f %d %f\n" % (key, tempTravelTime, tempSpeed, value[0], stdDev))  # average travel time of "key" road segment, speed, flow;
-            jsonData[-1]["nodes"][str(key)] = {"speed": tempSpeed,
-                                                              "flow": value[0],
-                                                              "travelTime": tempTravelTime,
-                                                              "distance": float(road[key][0]),
-                                                              "SD": stdDev
-                                                              }
-            if stdDev > maxSD: maxSD = stdDev 
-            if stdDev < minSD: minSD = stdDev
-
+            # CSV format: RoadKey RoadLen Speed1 Speed2 Speed3 ...
+            outFile_node.write("%s %f " % (key, float(road[key][0]) ) )
+            for eachSpeed in value:
+                outFile_node.write("%f " % (eachSpeed))
+            outFile_node.write("\n")
+            
         outFile_node.close()
-        
-        jsonData[-1]["maxSD"] = maxSD
-        jsonData[-1]["minSD"] = minSD
-
-
-        print("Betweenness centrolity graph generation done....")
 
         # Print some statistics on the processed data
         print("Time slot: %s" % (sTmpFile))
-        print(" %s edges filtered by distance threshold." % (numberOfThreshold))
-        print(" %s edges filtered by time threshold." % (numberOfTimeThreshold))
-        print("   Total taxis  : %d" % (nTaxiProcessed))
-        print("   Total points : %d" % (nRecProcessed))
-        
-    #Write to json file
-    jsonFile.write("var dataset = ")
-    jsonFile.write(json.dumps(jsonData, indent=4, sort_keys=False))
-
+        print " %s edges filtered by distance threshold." % (numberOfThreshold) ,
+        print " %s edges filtered by time threshold." % (numberOfTimeThreshold)
+        print "   Total taxis  : %d" % (nTaxiProcessed),
+        print "   Total points : %d" % (nRecProcessed)
 
     end_time = datetime.datetime.now();
     print("DONE by %f s" % ((end_time - start_time).total_seconds()));
