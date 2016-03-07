@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 import os.path
 
-jsonFileName = "OneMonth_201101_1hour.json"
+jsonFileName = "OneMonth_201101_1hour_WithMaxMinSpeed.json"
 TEST = False
 outputDir = "./output"
 minAcceptedSpeed = -1.0
@@ -64,6 +64,14 @@ def rescaleSD(data, lowerBound = 1.0, upperBound = 10.0):
         b = float(maxSD * lowerBound - minSD * upperBound) / (maxSD - minSD)
     for key, node in data.items():
         node['SDwidth'] = a * node['SD'] + b
+        
+def getGlobelMSpeeds(data):
+    maxSpeed = 0
+    minSpeed = 10000
+    for key, node in data.items():
+        if node['maxSpeed'] > maxSpeed: maxSpeed = node['maxSpeed']
+        if node['minSpeed'] < minSpeed: minSpeed = node['minSpeed']
+    return maxSpeed, minSpeed
 
 def main():
     if (os.path.isfile(jsonFileName)):
@@ -80,8 +88,11 @@ def main():
             loadData(nodesData,day,time)
         calculateInData(nodesData)
         rescaleSD(nodesData)
+        maxSpeed, minSpeed = getGlobelMSpeeds(nodesData)
         jsonData.append({'time': "2011-01T%02i-00-00" % hour, 
-                         'nodes': nodesData})
+                         'nodes': nodesData,
+                         'maxSpeed': maxSpeed,
+                         'minSpeed': minSpeed})
         print("\nFinish hour[%i] on %f s,   %i nodes" % \
               (hour, (datetime.now() - start_time).total_seconds(), len(nodesData)) )
         
