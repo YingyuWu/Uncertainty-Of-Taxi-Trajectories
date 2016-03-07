@@ -26,7 +26,7 @@ import Utils
 # import PageRank
 import math
 import datetime
-import json
+
 
 TEST = False
 
@@ -98,13 +98,9 @@ for frafra in range(3, 32):
             data[timeStart].write("%s,%s,%s,%s,%s\n" % \
                  (csv[Utils.iPlate], csv[Utils.iTime], csv[Utils.iRId], csv[Utils.iLoad], csv[Utils.iSpd]))
         except UnicodeEncodeError:
-            print "----- UnicodeEncodeError Happend ---"
-            data[timeStart].write("%s,%s,%s,%s,%s\n" % \
-                 (csv[Utils.iPlate].encode("utf-8"), csv[Utils.iTime], 
-                  csv[Utils.iRId].encode("utf-8"), 
-                  csv[Utils.iLoad].encode("utf-8"), 
-                  csv[Utils.iSpd].encode("utf-8")))
-            
+            print "----- UnicodeEncodeError Happened ---"
+            print csv[Utils.iPlate],csv[Utils.iTime],csv[Utils.iRId],csv[Utils.iLoad], csv[Utils.iSpd]
+                        
         # DEBUG: Process a subset of the total over all points.  Just makes
         #         it faster to test during development.
         if TEST and nRecProcessed > 500000:
