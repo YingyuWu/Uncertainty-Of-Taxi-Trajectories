@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 import os.path
 
-jsonFileName = "OneMonth_201101_1hour_WithMaxMinSpeed.json"
+jsonFileName = "OneMonth_201101_1hour_TestMaxSpeed.json"
 TEST = False
 outputDir = "./output"
 minAcceptedSpeed = -1.0
@@ -21,7 +21,7 @@ def loadData(data, day, time):
         line = line.strip().split(' ')
         if line[0] not in data:
             data[line[0]] = {'distance':float(line[1]), 'speeds':[]}
-        data[line[0]]['speeds'] += [float(x) for x in line[2:] if float(x) >= minAcceptedSpeed]
+        data[line[0]]['speeds'] += [float(x) for x in line[2:] if float(x) >= minAcceptedSpeed]   
         count += 1
         if count > 10 and TEST: break
     #print "Load %i Data From %s" % (count, fileName)
@@ -69,6 +69,9 @@ def getGlobelMSpeeds(data):
     maxSpeed = 0
     minSpeed = 10000
     for key, node in data.items():
+        if node['maxSpeed'] > 200: 
+            print "Abnormal Maxspeed!"
+            print key, node
         if node['maxSpeed'] > maxSpeed: maxSpeed = node['maxSpeed']
         if node['minSpeed'] < minSpeed: minSpeed = node['minSpeed']
     return maxSpeed, minSpeed
