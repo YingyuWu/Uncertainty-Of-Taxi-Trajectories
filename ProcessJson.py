@@ -8,11 +8,9 @@ import os.path
 from matplotlib import pyplot
 
 jsonFileName = "./json/OneMonth_201101_1hour_PlotSD.json"
-TEST = False
+TEST = True
 outputDir = "./output"
 minAcceptedSpeed = 1
-
-allRSD = []
 
 def dayToWeekday(day, firstWeekDay):
     # return the weekday num (Sun-0, Mon-1 ...) from the day input
@@ -69,7 +67,6 @@ def calculateInData(data):
         node['travelTime'] = (node['distance'] / node['speed']) if node['speed'] > 0.01 else 0
         node['SD'] = standardDeviation(node['speeds'], node['speed'])
         node['RSD'] = node['SD'] / node['speed'] if node['speed'] > 0.01 else 0
-        if (node['RSD']>0.001): allRSD.append(node['RSD'])
         calculateWeekdaySpeeds(node)
         del node['speeds']
         del node['speedsWeekdays']
@@ -121,14 +118,6 @@ def main():
                          'minSpeed': minSpeed})
         print("\nFinish hour[%i] on %f s,   %i nodes" % \
               (hour, (datetime.now() - start_time).total_seconds(), len(nodesData)) )
-    
-    # Plot RSD histogram    
-    pyplot.hist(allRSD,100,alpha = 0.7)
-    pyplot.xlabel('Relative Standard Deviation')
-    pyplot.ylabel('Probability')
-    pyplot.title('Histogram of RSD')
-    pyplot.grid(True)
-    pyplot.show()
         
     jsonFile = open(jsonFileName, 'w')
     jsonFile.write(json.dumps(jsonData, indent=4, sort_keys=False))
