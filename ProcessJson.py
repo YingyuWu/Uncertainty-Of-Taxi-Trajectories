@@ -9,7 +9,7 @@ import os.path
 jsonFileName = "OneMonth_201101_1hour_TestMaxSpeed.json"
 TEST = False
 outputDir = "./output"
-minAcceptedSpeed = -1.0
+minAcceptedSpeed = 1
 
 def loadData(data, day, time):
     # loadData from one day one hour
@@ -46,10 +46,11 @@ def calculateInData(data):
         node['flow'] = len(node['speeds'])
         node['travelTime'] = (node['distance'] / node['speed']) if node['speed'] > 0.01 else 0
         node['SD'] = standardDeviation(node['speeds'], node['speed'])
+        node['RSD'] = node['SD'] / node['speed']
         del node['speeds']
         
-def rescaleSD(data, lowerBound = 1.0, upperBound = 10.0):
-    # rescale SD in data between lowBound and upperBound
+def rescaleRSD(data, lowerBound = 1.0, upperBound = 10.0):
+    # rescale RSD in data between lowBound and upperBound
     maxSD = 0
     minSD = 100000
     for key, node in data.items():
@@ -63,7 +64,7 @@ def rescaleSD(data, lowerBound = 1.0, upperBound = 10.0):
         a = float(upperBound - lowerBound) / (maxSD - minSD)
         b = float(maxSD * lowerBound - minSD * upperBound) / (maxSD - minSD)
     for key, node in data.items():
-        node['SDwidth'] = a * node['SD'] + b
+        node['RSDwidth'] = a * node['SD'] + b
         
 def getGlobelMSpeeds(data):
     maxSpeed = 0
