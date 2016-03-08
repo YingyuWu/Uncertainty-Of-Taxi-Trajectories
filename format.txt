@@ -20,7 +20,7 @@
                 "SD": 2.11
                 "RSD": 0-1
                 "RSDwidth": 1-10
-                "weekdaySpeeds": [33.333, 28.9999, ] # Sun - Sat
+                "weekdaySpeeds": [33.333, 28.9999, ...] # Sun - Sat
             },
             ... Another Node
         },
