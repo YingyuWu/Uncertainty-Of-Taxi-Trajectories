@@ -51,20 +51,20 @@ def calculateInData(data):
         
 def rescaleRSD(data, lowerBound = 1.0, upperBound = 10.0):
     # rescale RSD in data between lowBound and upperBound
-    maxSD = 0
-    minSD = 100000
+    maxRSD = 0
+    minRSD = 100000
     for key, node in data.items():
-        if node['SD'] > maxSD: maxSD = node['SD']
-        if node['SD'] < minSD: minSD = node['SD']
+        if node['RSD'] > maxRSD: maxSD = node['RSD']
+        if node['RSD'] < minRSD: minRSD = node['RSD']
     
-    if (maxSD - minSD) < 0.1:
+    if (maxRSD - minRSD) < 0.1:
         a = 0.0
         b = lowerBound
     else:
-        a = float(upperBound - lowerBound) / (maxSD - minSD)
-        b = float(maxSD * lowerBound - minSD * upperBound) / (maxSD - minSD)
+        a = float(upperBound - lowerBound) / (maxRSD - minRSD)
+        b = float(maxRSD * lowerBound - minRSD * upperBound) / (maxRSD - minRSD)
     for key, node in data.items():
-        node['RSDwidth'] = a * node['SD'] + b
+        node['RSDwidth'] = a * node['RSD'] + b
         
 def getGlobelMSpeeds(data):
     maxSpeed = 0
@@ -91,7 +91,7 @@ def main():
             time = "2011-12-%02iT%02i-00-00" % (day, hour)
             loadData(nodesData,day,time)
         calculateInData(nodesData)
-        rescaleSD(nodesData)
+        rescaleRSD(nodesData)
         maxSpeed, minSpeed = getGlobelMSpeeds(nodesData)
         jsonData.append({'time': "2011-01T%02i-00-00" % hour, 
                          'nodes': nodesData,
