@@ -5,11 +5,19 @@
 import json
 from datetime import datetime
 import os.path
+from matplotlib import pyplot
 
-jsonFileName = "OneMonth_201101_1hour_TestMaxSpeed.json"
+jsonFileName = "./json/OneMonth_201101_1hour_PlotSD.json"
 TEST = False
 outputDir = "./output"
 minAcceptedSpeed = 1
+
+allRSD = []
+
+def dayToWeekday(day, firstWeekDay):
+    # return the weekday num (Sun-0, Mon-1 ...) from the day input
+    # firstWeekDay is 1st day weekday num, e.g. Jan.1st is Saturday, firstWeekDay = 6
+    return (day + firstWeekDay - 1) % 7
 
 def loadData(data, day, time):
     # loadData from one day one hour
@@ -20,8 +28,10 @@ def loadData(data, day, time):
     for line in f:
         line = line.strip().split(' ')
         if line[0] not in data:
-            data[line[0]] = {'distance':float(line[1]), 'speeds':[]}
-        data[line[0]]['speeds'] += [float(x) for x in line[2:] if float(x) >= minAcceptedSpeed]   
+            data[line[0]] = {'distance':float(line[1]), 'speeds':[], 'speedsWeekdays':[]}
+        tempSpeedsToAdd = [float(x) for x in line[2:] if float(x) >= minAcceptedSpeed]
+        data[line[0]]['speeds'] += tempSpeedsToAdd
+        data[line[0]]['speedsWeekdays'] += [dayToWeekday(day, 6)] * len(tempSpeedsToAdd)
         count += 1
         if count > 10 and TEST: break
     #print "Load %i Data From %s" % (count, fileName)
@@ -31,7 +41,19 @@ def standardDeviation(l,average = 0):
     if (len(l) <= 1): return 0
     if (average is 0): average = sum(l) / len(l)
     return ( sum([ (x-average)**2 for x in l ]) / (len(l) - 1) ) ** 0.5
-        
+
+def calculateWeekdaySpeeds(node):
+    # return each weekday speeds
+    speedsSum = [0] * 7
+    speedsCount = [0] * 7
+    for i, speed in enumerate(node['speeds']):
+        speedsSum[ node['speedsWeekdays'][i] ] += speed
+        speedsCount[ node['speedsWeekdays'][i] ] += 1
+    node['weekdaySpeeds'] = []
+    for weekday in range(0,7):
+        node['weekdaySpeeds'].append(speedsSum[weekday]/speedsCount[weekday]
+                                     if speedsCount[weekday] !=0 else 0)
+            
 def calculateInData(data):
     # According to format.txt, calculate data
     for key, node in data.items():
@@ -46,18 +68,21 @@ def calculateInData(data):
         node['flow'] = len(node['speeds'])
         node['travelTime'] = (node['distance'] / node['speed']) if node['speed'] > 0.01 else 0
         node['SD'] = standardDeviation(node['speeds'], node['speed'])
-        node['RSD'] = node['SD'] / node['speed']
+        node['RSD'] = node['SD'] / node['speed'] if node['speed'] > 0.01 else 0
+        if (node['RSD']>0.001): allRSD.append(node['RSD'])
+        calculateWeekdaySpeeds(node)
         del node['speeds']
+        del node['speedsWeekdays']
         
 def rescaleRSD(data, lowerBound = 1.0, upperBound = 10.0):
     # rescale RSD in data between lowBound and upperBound
     maxRSD = 0
-    minRSD = 100000
+    minRSD = 10000
     for key, node in data.items():
-        if node['RSD'] > maxRSD: maxSD = node['RSD']
+        if node['RSD'] > maxRSD: maxRSD = node['RSD']
         if node['RSD'] < minRSD: minRSD = node['RSD']
     
-    if (maxRSD - minRSD) < 0.1:
+    if (maxRSD - minRSD) < 0.0001:
         a = 0.0
         b = lowerBound
     else:
@@ -70,15 +95,12 @@ def getGlobelMSpeeds(data):
     maxSpeed = 0
     minSpeed = 10000
     for key, node in data.items():
-        if node['maxSpeed'] > 200: 
-            print "Abnormal Maxspeed!"
-            print key, node
         if node['maxSpeed'] > maxSpeed: maxSpeed = node['maxSpeed']
         if node['minSpeed'] < minSpeed: minSpeed = node['minSpeed']
     return maxSpeed, minSpeed
 
 def main():
-    if (os.path.isfile(jsonFileName)):
+    if (not TEST and os.path.isfile(jsonFileName)):
         print jsonFileName, "exists. Quit for avoiding mistake"
         return
     start_time = datetime.now()
@@ -99,6 +121,14 @@ def main():
                          'minSpeed': minSpeed})
         print("\nFinish hour[%i] on %f s,   %i nodes" % \
               (hour, (datetime.now() - start_time).total_seconds(), len(nodesData)) )
+    
+    # Plot RSD histogram    
+    pyplot.hist(allRSD,100,alpha = 0.7)
+    pyplot.xlabel('Relative Standard Deviation')
+    pyplot.ylabel('Probability')
+    pyplot.title('Histogram of RSD')
+    pyplot.grid(True)
+    pyplot.show()
         
     jsonFile = open(jsonFileName, 'w')
     jsonFile.write(json.dumps(jsonData, indent=4, sort_keys=False))

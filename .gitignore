@@ -5,6 +5,7 @@ data/
 *.csv
 outputTry/
 output/
+json/
 
 # LiClipse Project file
 .project
