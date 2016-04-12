@@ -115,7 +115,7 @@ def load_time_weekday(vs,weekday,hour):
     maxT = 0.0
     minT = maxAcceptedTime
     for day in range(1,32):
-        if day_to_weekday(day,6) == weekday:
+        if weekday == 7 or day_to_weekday(day,6) == weekday:
             load_speeds(speeds,day,hour)
     for key,value in speeds.items():
         dis = value['distance']
@@ -174,7 +174,7 @@ def write_gradient(vs,gradient,weekday,hour):
     with open(outFileName,'w') as outfile:
         json.dump(contour,outfile,indent=2,sort_keys=True)
 
-def main():
+def output_by_weekday(hour):
     graph = read_graph()
     roadNet = read_roadNet()
     sources = find_source_roads(roadNet,20)
@@ -184,11 +184,20 @@ def main():
         vs = copy.deepcopy(roadNet)
         load_time_weekday(vs,weekday,hour)
         for source in sources:
-            dijkstra(graph, vs, source,gradient, 1)
-        write_gradient(vs,gradient,weekday,hour)    
-            
-    
-    
+            dijkstra(graph, vs, source, gradient, 1)
+        write_gradient(vs,gradient,weekday,hour)   
+        
+ 
+def main():
+    graph = read_graph()
+    vs = read_roadNet()
+    sources = find_source_roads(vs,20)
+    hour = 8
+    gradient = {}  
+    load_time_weekday(vs,7,hour)
+    for source in sources:
+        dijkstra(graph, vs, source, gradient, 1)
+    write_gradient(vs,gradient,7,hour)  
     
 if __name__ == "__main__":
     start_time = time.time()
