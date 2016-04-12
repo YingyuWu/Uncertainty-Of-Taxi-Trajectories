@@ -133,8 +133,8 @@ def load_time_weekday(vs,weekday,hour):
     print "Weekday:%i Hour:%i maxTime:%f minTime:%f" % (weekday,hour,maxT,minT)
     
 def dijkstra(graph, vs, source,result, hourlimit = 1):
-    minute = 1
-    timeStep = 1
+    minute = 2
+    timeStep = 2
     # initialize
     dist = {}
     for v in vs:
@@ -188,7 +188,8 @@ def output_by_weekday(hour):
         
  
 def main():
-    output_by_weekday(8)
+    for hour in range(0,24):
+        output_by_weekday(hour)
     
 if __name__ == "__main__":
     start_time = time.time()
