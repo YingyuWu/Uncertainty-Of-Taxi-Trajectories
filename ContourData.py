@@ -9,6 +9,7 @@ from shapely.geometry import Point
 import time
 import heapq
 from curses.ascii import alt
+import copy
 
 roadNetGeojson = "road_distance_info/roadnetwork.geojson"
 graphJson = "road_distance_info/roadGraph.json"
@@ -132,8 +133,8 @@ def load_time_weekday(vs,weekday,hour):
     print "Weekday:%i Hour:%i maxTime:%f minTime:%f" % (weekday,hour,maxT,minT)
     
 def dijkstra(graph, vs, source,result, hourlimit = 1):
-    minute = 5
-    timeStep = 5
+    minute = 1
+    timeStep = 1
     # initialize
     dist = {}
     for v in vs:
@@ -161,10 +162,11 @@ def dijkstra(graph, vs, source,result, hourlimit = 1):
 def c_to_dict(c):
     return {'lng':c[0], 'lat':c[1]}
     
-def write_gradient(vs,gradient):
-    outFileName = "Wed-8am.json"
+def write_gradient(vs,gradient,weekday,hour):
+    outFileName = "contourData/%i-%i.json" % (weekday,hour)
     contour = {}
     for key,value in gradient.items():
+        if key% 10 != 0: continue
         contour[key] = []
         for a in value:
             contour[key].append(c_to_dict(vs[a]['coordinates'][0]))
@@ -173,15 +175,17 @@ def write_gradient(vs,gradient):
         json.dump(contour,outfile,indent=2,sort_keys=True)
 
 def main():
-    gradient = {}
     graph = read_graph()
-    vs = read_roadNet()
-    sources = find_source_roads(vs,20)
-    load_time_weekday(vs,3,8)
-    for source in sources:
-        dijkstra(graph, vs, source,gradient, 1)
-    write_gradient(vs,gradient)
-        
+    roadNet = read_roadNet()
+    sources = find_source_roads(roadNet,20)
+    hour = 8
+    for weekday in range(0,7):
+        gradient = {}
+        vs = copy.deepcopy(roadNet)
+        load_time_weekday(vs,weekday,hour)
+        for source in sources:
+            dijkstra(graph, vs, source,gradient, 1)
+        write_gradient(vs,gradient,weekday,hour)    
             
     
     
