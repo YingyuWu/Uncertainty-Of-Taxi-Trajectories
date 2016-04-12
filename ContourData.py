@@ -7,11 +7,16 @@ from sets import Set
 from shapely.geometry import LineString
 from shapely.geometry import Point
 import time
+import heapq
+from curses.ascii import alt
 
-start_time = time.time()
 roadNetGeojson = "road_distance_info/roadnetwork.geojson"
 graphJson = "road_distance_info/roadGraph.json"
+speedDataDir = "./speedData"
 TEST = True
+minAcceptedSpeed = 10.0
+maxAcceptedTime = 2
+
 
 def read_roadNet():
     ''' 
@@ -26,7 +31,7 @@ def read_roadNet():
     for road in data['features']:
         key = int(road['properties']['partitionID'])
         if key > maxRoad: maxRoad = key 
-        roadNet[key] = road['geometry']['coordinates']
+        roadNet[key] = {'coordinates':road['geometry']['coordinates']}
     print "Read %i roads from \'%s\'" % (len(roadNet),roadNetGeojson)
     print "Max road ID: %i" % (maxRoad)
     return roadNet
@@ -58,14 +63,17 @@ def read_graph():
         return graph
     
                 
-def find_source_roads(roadNet):
+def find_source_roads(roadNet, radius = 100):
+    rDegree = 1.0 / 111111 * radius
+    print "rDegree",rDegree
     p = Point(120.14983713626863,30.275047006544927)
-    c = p.buffer(0.0001).boundary
+    c = p.buffer(rDegree).boundary
     result = []
     for key,value in roadNet.iteritems():
-        l = LineString(value)
+        l = LineString(value['coordinates'])
         if c.intersects(l):
             result.append(key)
+    print "Found %i sources: " % len(result), result
     return result
 
 def day_to_weekday(day, firstWeekDay):
@@ -73,29 +81,114 @@ def day_to_weekday(day, firstWeekDay):
     # firstWeekDay is 1st day weekday num, e.g. Jan.1st is Saturday, firstWeekDay = 6
     return (day + firstWeekDay - 1) % 7
 
-def load_speed(day, time):
+def load_speeds(data, day, hour):
     # loadData from one day one hour
-    result = {}
+    timestring = "2011-12-%02iT%02i-00-00" % (day, hour)
     fileName = "%s/%s/%s.graph.tarveltime.node.csv" \
-                % (outputDir,day,time)
+                % (speedDataDir,day,timestring)
     f = open(fileName,'r')
     count = 0
     for line in f:
         line = line.strip().split(' ')
         if line[0] not in data:
-            result[line[0]] = {'distance':float(line[1]), 'speeds':[], 'speedsWeekdays':[]}
-        tempSpeedsToAdd = [float(x) for x in line[2:] if float(x) >= minAcceptedSpeed]
-        data[line[0]]['speeds'] += tempSpeedsToAdd
-        data[line[0]]['speedsWeekdays'] += [dayToWeekday(day, 6)] * len(tempSpeedsToAdd)
+            data[int(line[0])] = {'distance':float(line[1]), 'speeds':[]}
+        speedsToAdd = [float(x) for x in line[2:] if float(x) >= minAcceptedSpeed]
+        data[int(line[0])]['speeds'] += speedsToAdd
         count += 1
-        if count > 10 and TEST: break
-    #print "Load %i Data From %s" % (count, fileName)
+    print "Done Load day %i hour %i" % (day, hour)
+    return data
+
+def standardDeviation(l,average = 0):
+    # calculate the sample standard deviation
+    if (len(l) <= 1): return 0
+    if (average is 0): average = sum(l) / len(l)
+    return ( sum([ (x-average)**2 for x in l ]) / (len(l) - 1) ) ** 0.5
+
+def variance(l,average = 0):
+    if (len(l) <= 1): return 0
+    if (average is 0): average = sum(l) / len(l)
+    return sum([ (x-average)**2 for x in l ]) / (len(l) )
+    
+def load_time_weekday(vs,weekday,hour):
+    speeds = {}
+    maxT = 0.0
+    minT = maxAcceptedTime
+    for day in range(1,32):
+        if day_to_weekday(day,6) == weekday:
+            load_speeds(speeds,day,hour)
+    for key,value in speeds.items():
+        dis = value['distance']
+        sps = value['speeds']
+        if not sps: continue
+        times = [dis/x for x in sps]
+        maxT = max(times + [maxT])
+        minT = min(times + [minT])
+        vs[key]['timeAverage'] = sum(times)/len(times) if len(times) is not 0 else maxAcceptedTime
+        vs[key]['timeVar'] = variance(times,vs[key]['timeAverage'])  
+    for key,value in vs.items():
+        if 'timeAverage' not in value:
+            value['timeAverage'] = maxAcceptedTime
+            value['timeVar'] = 0
+    print "Weekday:%i Hour:%i maxTime:%f minTime:%f" % (weekday,hour,maxT,minT)
+    
+def dijkstra(graph, vs, source,result, hourlimit = 1):
+    minute = 5
+    timeStep = 5
+    # initialize
+    dist = {}
+    for v in vs:
+        dist[v] = float('inf')
+    dist[source] = vs[source]['timeAverage']
+    Q = [(vs[source]['timeAverage'], source, vs[source]['timeVar'])]
+    visited = set()
+    
+    while Q:
+        (cost,u,var) = heapq.heappop(Q)
+        if cost > hourlimit: break
+        while (cost>float(minute)/60): minute += timeStep
+        if minute not in result: result[minute] = []
+        result[minute].append(u)
+        
+        if u not in visited:
+            visited.add(u)
+            for v in graph[u]:
+                if v not in visited:
+                    alt = dist[u] + vs[v]['timeAverage']
+                    if alt < dist[v]:
+                        dist[v] = alt
+                        heapq.heappush(Q, (alt,v,var + vs[v]['timeVar']))
+
+def c_to_dict(c):
+    return {'lng':c[0], 'lat':c[1]}
+    
+def write_gradient(vs,gradient):
+    outFileName = "Wed-8am.json"
+    contour = {}
+    for key,value in gradient.items():
+        contour[key] = []
+        for a in value:
+            contour[key].append(c_to_dict(vs[a]['coordinates'][0]))
+            contour[key].append(c_to_dict(vs[a]['coordinates'][-1]))
+    with open(outFileName,'w') as outfile:
+        json.dump(contour,outfile,indent=2,sort_keys=True)
+
+def main():
+    gradient = {}
+    graph = read_graph()
+    vs = read_roadNet()
+    sources = find_source_roads(vs,20)
+    load_time_weekday(vs,3,8)
+    for source in sources:
+        dijkstra(graph, vs, source,gradient, 1)
+    write_gradient(vs,gradient)
+        
+            
+    
     
     
 if __name__ == "__main__":
-    graph = read_graph()
-    vertexes = read_roadNet()
-    sources = find_source_roads(roadNet)
+    start_time = time.time()
+    main()
     print("--- %.3f seconds ---" % (time.time() - start_time))
     
     
