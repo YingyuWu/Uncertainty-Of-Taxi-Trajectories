@@ -178,8 +178,7 @@ def output_by_weekday(hour):
     graph = read_graph()
     roadNet = read_roadNet()
     sources = find_source_roads(roadNet,20)
-    hour = 8
-    for weekday in range(0,7):
+    for weekday in range(0,8):
         gradient = {}
         vs = copy.deepcopy(roadNet)
         load_time_weekday(vs,weekday,hour)
@@ -189,15 +188,7 @@ def output_by_weekday(hour):
         
  
 def main():
-    graph = read_graph()
-    vs = read_roadNet()
-    sources = find_source_roads(vs,20)
-    hour = 8
-    gradient = {}  
-    load_time_weekday(vs,7,hour)
-    for source in sources:
-        dijkstra(graph, vs, source, gradient, 1)
-    write_gradient(vs,gradient,7,hour)  
+    output_by_weekday(8)
     
 if __name__ == "__main__":
     start_time = time.time()
