@@ -15,6 +15,7 @@ Project Progress:
     
 3. (04/21/2016)
     Idea: For each poi, compute a 7*24 matrix(x axis is 24 hours, y axis is 7 weekdays) to represent the reachbility from center point.
+    Draw Heatmap for each poi (on click)
     center point latlng: 30.24659290255, 120.17695426940918 hangzhou railway station.
     Datasource: postgresql database
     Database: poi
