@@ -20,6 +20,6 @@ Project Progress:
     Datasource: postgresql database
     Database: poi
     New Tables: poi_road(contains pois within 5 km from center point, for each poi, contains all the related road segnments(within 200 meters))
-                traveltime(contains ZHANGCHENG NI LAI XIE)
+                traveltime(contains travel time to all the roads from center point, contains information for each weekday and each hour)
     
     
