@@ -19,6 +19,7 @@ Project Progress:
     center point latlng: 30.24659290255, 120.17695426940918 hangzhou railway station.
     Datasource: postgresql database
     Database: poi
+    table: poi_road, traveltime
     New Tables: poi_road(contains pois within 5 km from center point, for each poi, contains all the related road segnments(within 200 meters))
                 traveltime(contains travel time to all the roads from center point, contains information for each weekday and each hour)
                 
