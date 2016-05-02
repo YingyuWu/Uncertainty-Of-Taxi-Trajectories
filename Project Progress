@@ -26,5 +26,6 @@ Project Progress:
     Idea: Combine progress 1 and progress 3, try to update the backend system. Update color range
           Draw poi information as popup 
           Create cluster view while zoom out
+          change poi related street segnments distance to 100 and remove those empty records
     
     
