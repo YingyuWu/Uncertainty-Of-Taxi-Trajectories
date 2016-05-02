@@ -21,5 +21,8 @@ Project Progress:
     Database: poi
     New Tables: poi_road(contains pois within 5 km from center point, for each poi, contains all the related road segnments(within 200 meters))
                 traveltime(contains travel time to all the roads from center point, contains information for each weekday and each hour)
+                
+4. (04/28/2016)
+    Idea: Combine progress 1 and progress 3, try to update the backend system
     
     
