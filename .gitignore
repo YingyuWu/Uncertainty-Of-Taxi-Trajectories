@@ -6,6 +6,7 @@ data/
 outputTry/
 speedData/
 json/
+temp_data/
 
 # LiClipse Project file
 .project
