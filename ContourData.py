@@ -15,9 +15,10 @@ roadNetGeojson = "road_distance_info/roadnetwork.geojson"
 graphJson = "road_distance_info/roadGraph.json"
 speedDataDir = "./speedData"
 TEST = True
-minAcceptedSpeed = 10.0
-maxAcceptedTime = 2
-
+minAcceptedSpeed = 10.0     #10 km/h
+maxAcceptedTime = 10        #10 hours
+#sourcePoint = Point(120.14983713626863,30.275047006544927)
+sourcePoint = Point(120.17695426940918,30.24659290255)
 
 def read_roadNet():
     ''' 
@@ -61,13 +62,14 @@ def read_graph():
         graph = json.load(infile)
         for key in graph:
             graph[int(key)] = graph.pop(key)
+        print "Read %i vertexes from %s" % (len(graph),graphJson)
         return graph
     
                 
 def find_source_roads(roadNet, radius = 100):
     rDegree = 1.0 / 111111 * radius
     print "rDegree",rDegree
-    p = Point(120.14983713626863,30.275047006544927)
+    p = sourcePoint
     c = p.buffer(rDegree).boundary
     result = []
     for key,value in roadNet.iteritems():
@@ -96,7 +98,7 @@ def load_speeds(data, day, hour):
         speedsToAdd = [float(x) for x in line[2:] if float(x) >= minAcceptedSpeed]
         data[int(line[0])]['speeds'] += speedsToAdd
         count += 1
-    print "Done Load day %i hour %i" % (day, hour)
+    #print "Done Load day %i hour %i" % (day, hour)
     return data
 
 def standardDeviation(l,average = 0):
@@ -124,6 +126,7 @@ def load_time_weekday(vs,weekday,hour):
         times = [dis/x for x in sps]
         maxT = max(times + [maxT])
         minT = min(times + [minT])
+        if key not in vs: vs[key] = {}
         vs[key]['timeAverage'] = sum(times)/len(times) if len(times) is not 0 else maxAcceptedTime
         vs[key]['timeVar'] = variance(times,vs[key]['timeAverage'])  
     for key,value in vs.items():
@@ -131,7 +134,26 @@ def load_time_weekday(vs,weekday,hour):
             value['timeAverage'] = maxAcceptedTime
             value['timeVar'] = 0
     print "Weekday:%i Hour:%i maxTime:%f minTime:%f" % (weekday,hour,maxT,minT)
+
+def get_time(vs,weekday,hour):
+    speeds = {}
+    maxT = 0.0
+    minT = maxAcceptedTime
+    for day in range(1,32):
+        if weekday == 7 or day_to_weekday(day,6) == weekday:
+            load_speeds(speeds,day,hour)
+    for key,value in speeds.items():
+        dis = value['distance']
+        sps = value['speeds']
+        if not sps: continue
+        times = [dis/x for x in sps]
+        #maxT = max(times + [maxT])
+        #minT = min(times + [minT])
+        vs[key] = sum(times)/len(times) if len(times) is not 0 \
+                            else maxAcceptedTime
+    print "Weekday:%i Hour:%i" % (weekday,hour)                   
     
+   
 def dijkstra(graph, vs, source,result, hourlimit = 1):
     minute = 2
     timeStep = 2
@@ -159,6 +181,30 @@ def dijkstra(graph, vs, source,result, hourlimit = 1):
                         dist[v] = alt
                         heapq.heappush(Q, (alt,v,var + vs[v]['timeVar']))
 
+def dijkstra(graph, vs, source,result, weekday, hour, hourlimit = 1):
+    # initialize
+    dist = {}
+    for v in vs:
+        dist[v] = float('inf')
+    dist[source] = vs[source]
+    Q = [(vs[source], source)]
+    visited = set()
+    
+    while Q:
+        (cost,u) = heapq.heappop(Q)
+        if cost > hourlimit: break
+        if cost < result[u][weekday][hour]:
+            result[u][weekday][hour] = cost
+        
+        if u not in visited:
+            visited.add(u)
+            for v in graph[u]:
+                if v not in visited:
+                    alt = dist[u] + vs[v]
+                    if alt < dist[v]:
+                        dist[v] = alt
+                        heapq.heappush(Q, (alt,v))
+
 def c_to_dict(c):
     return {'lng':c[0], 'lat':c[1]}
     
@@ -185,11 +231,35 @@ def output_by_weekday(hour):
         for source in sources:
             dijkstra(graph, vs, source, gradient, 1)
         write_gradient(vs,gradient,weekday,hour)   
-        
- 
-def main():
+           
+def output_all_contour():
     for hour in range(0,24):
         output_by_weekday(hour)
+        
+def get_times_allday_allhour():
+    graph = read_graph()
+    roadNet = read_roadNet()
+    sources = find_source_roads(roadNet,200)
+    roadSiz = len(roadNet)
+    result = {}
+    for i in range(1,roadSiz+1):
+        result[i] = [[maxAcceptedTime]*24]
+        for weekday in range(1,7):
+            result[i].append([maxAcceptedTime]*24)
+    for weekday in range(0,7):
+        for hour in range(0,24):
+            vs = {}
+            for i in range(1,roadSiz+1):
+                vs[i] = maxAcceptedTime
+            get_time(vs,weekday,hour)
+            for source in sources:
+                dijkstra(graph,vs,source,result,weekday,hour,hourlimit = 2)
+    with open('dataBaseTemp.txt','w') as outfile:
+        json.dump(result,outfile,indent=2)
+    
+ 
+def main():
+    get_times_allday_allhour()
     
 if __name__ == "__main__":
     start_time = time.time()
