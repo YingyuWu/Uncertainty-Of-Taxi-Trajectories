@@ -1,0 +1,32 @@
+Project Progress:
+1. (date undefined) 
+    Idea: Analysis uncertainty of road speed and uncertainty of pois distribution 
+    Implement:Road Network View, 
+    speed of each road segnment is assigned as color of the road, 
+    uncertainty of each road segnment is assigned as width of the road.
+    Datasource: json,
+    https://web.cs.kent.edu/~ywu23/uncertinty/uncertainty.html
+    
+2. (date undefined)
+    Idea: Follow the idea of uncertainty of weather, draw contour on map to represent the reachbility.
+    Implement: Contour View including multiple selection(time)
+    Datasource: json,
+    https://web.cs.kent.edu/~ywu23/uncertinty/contour_multiselection.html
+    
+3. (04/21/2016)
+    Idea: For each poi, compute a 7*24 matrix(x axis is 24 hours, y axis is 7 weekdays) to represent the reachbility from center point.
+    Draw Heatmap for each poi (on click)
+    center point latlng: 30.24659290255, 120.17695426940918 hangzhou railway station.
+    Datasource: postgresql database
+    Database: poi
+    table: poi_road, traveltime
+    New Tables: poi_road(contains pois within 5 km from center point, for each poi, contains all the related road segnments(within 200 meters))
+                traveltime(contains travel time to all the roads from center point, contains information for each weekday and each hour)
+                
+4. (04/28/2016)
+    Idea: Combine progress 1 and progress 3, try to update the backend system. Update color range
+          Draw poi information as popup 
+          Create cluster view while zoom out
+          change poi related street segnments distance to 100 and remove those empty records
+    
+    
