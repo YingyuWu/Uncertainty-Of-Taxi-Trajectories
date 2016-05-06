@@ -1,5 +1,160 @@
+   var dataset;
+   var map;
+   var colors = ["#a50026","#f46d43","#fee08b","#d9ef8b","#66bd63","#1a9850","#006837"];
+  var colorscale = d3.scale.quantile().domain([0,120]).range(colors);
+function drawRoadNetwork(mymap){
+map = mymap;
+
+//var colorscale = d3.scale.linear().domain([0,120]).range(["red","blue"]);
+d3.json("data/OneMonth_201101_1hour_WithWeekdaySpeeds.json", function(error,data){
+
+  dataset = data;
+
+  d3.select("#timerange").append("select").attr("id","menu").selectAll("option").data(dataset).enter().append("option").attr("value",function(d,i){return i;}).text(function(d){return d.time});
+
+  d3.select("#menu").on("change", function(){
+    var timeUnit = eval(d3.select(this).property("selectedIndex"));
+    changeLayer(timeUnit,dataset,filternetwork);
+  });
+  
+  d3.select("#colors").append("svg").attr("height","100%").selectAll("rect").data(colors).enter().append("rect").attr("width","30px").attr("height","20px").attr("x", function(d,i){return 30 * i}).attr("y",0).style("fill",function(d){return d;})
+
+  d3.select("#colors").select("svg").selectAll("text").data(colors).enter().append("text").attr("x", function(d,i){return 30 * i;}).attr("y",25).text(function(d,i){
+    return showColorText(0,i,dataset);
+  }).style("font-size","12px")
+
+  var filternetwork = L.geoJson(roadnetwork, {
+        
+        filter: function (feature, layer) {
+          if (feature.properties) {
+            // If the property "underConstruction" exists and is true, return false (don't render features under construction)
+            var id = feature.properties.partitionID;
+            if(dataset[0].nodes[id]){//id exists in our dataset
+              feature.properties.speed = dataset[0].nodes[id].speed;
+              feature.properties.flow = dataset[0].nodes[id].flow;
+              feature.properties.travelTime = dataset[0].nodes[id].travelTime;
+              feature.properties.distance = dataset[0].nodes[id].distance;
+              feature.properties.SD = dataset[0].nodes[id].SD;
+              feature.properties.RSDwidth = dataset[0].nodes[id].RSDwidth;
+            }
+            return dataset[0].nodes[id] ? true : false;
+          }
+          return false;
+        },
+        style: function(feature) {
+          return  assignColor(feature,dataset[0].maxSpeed,dataset[0].minSpeed);  
+          },
+        onEachFeature: onEachFeature
+      }).addTo(map);
+  
+});//d3.json end
+
+}
+function showColorText(dataindex, i,dataset){
+  var sdRange = dataset[dataindex].maxSpeed - dataset[dataindex].minSpeed;
+  if(i == 0){
+    return  0;
+  }else if(i == 1){
+    return   10 ;
+  }else if(i == 2){
+    return   25;
+  }else if(i == 3){
+    return  50;
+  }else if(i == 4){
+    return   75;
+  }else if(i == 5){
+    return   90;
+  }else{
+    return  115;
+  }
+  /*if(i == 0){
+    return parseInt(dataset[dataindex].minSpeed) + "-" + parseInt(((1/ 6) * sdRange +  dataset[dataindex].minSpeed));
+  }else if(i == 1){
+    return parseInt(((1/ 6) * sdRange +  dataset[dataindex].minSpeed)) + " - " +  parseInt(((1/ 3) * sdRange +  dataset[dataindex].minSpeed));
+  }else if(i == 2){
+    return parseInt(((1/ 3) * sdRange +  dataset[dataindex].minSpeed)) + " - " +  parseInt(((1/ 2) * sdRange +  dataset[dataindex].minSpeed));
+  }else if(i == 3){
+    return parseInt(((1/ 2) * sdRange +  dataset[dataindex].minSpeed)) + " - " +  parseInt(((2/ 3) * sdRange +  dataset[dataindex].minSpeed));
+  }else if(i == 4){
+    return parseInt(((2/ 3) * sdRange +  dataset[dataindex].minSpeed)) + " - " +  parseInt(((5/ 6) * sdRange +  dataset[dataindex].minSpeed));
+  }else if(i == 5){
+    return parseInt(((5/ 6) * sdRange +  dataset[dataindex].minSpeed)) + " - " +   parseInt(dataset[dataindex].maxSpeed);
+  }else{
+    return " > " + parseInt(dataset[dataindex].maxSpeed);
+  }*/
+}
+function changeLayer(index,dataset,filternetwork){
+  map.removeLayer(filternetwork);
+  d3.select("#colors").select("svg").selectAll("text").text(function(d,i){
+    return showColorText(index,i,dataset);
+  })
+    filternetwork = L.geoJson(roadnetwork, {
+      
+      filter: function (feature, layer) {
+        if (feature.properties) {
+          // If the property "underConstruction" exists and is true, return false (don't render features under construction)
+          var id = feature.properties.partitionID;
+          if(dataset[index].nodes[id]){//id exists in our dataset
+            feature.properties.speed = dataset[index].nodes[id].speed;
+            feature.properties.flow = dataset[index].nodes[id].flow;
+            feature.properties.travelTime = dataset[index].nodes[id].travelTime;
+            feature.properties.distance = dataset[index].nodes[id].distance;
+            feature.properties.SD = dataset[index].nodes[id].SD;
+            feature.properties.RSDwidth = dataset[index].nodes[id].RSDwidth;
+          }
+          return dataset[index].nodes[id] ? true : false;
+        }
+        return false;
+      },
+      style: function(feature) {
+        var id = feature.properties.partitionID;
+        return assignColor(feature,dataset[index].maxSpeed,dataset[index].minSpeed);          
+        },
+      onEachFeature: onEachFeature
+    }).addTo(map);
+  
+}
+
+function assignColor(feature,maxSpeed,minSpeed){
+        var sdRange = maxSpeed - minSpeed;
+        var opacityvalue = 0.8;
+        if(feature.properties.speed >= 0){
+          return {color: colorscale(feature.properties.speed),weight: feature.properties.RSDwidth,opacity: opacityvalue};
+          /*if(feature.properties.speed >= 0 && feature.properties.speed < 10){
+            return {color: "#a50026", weight: feature.properties.RSDwidth,opacity: opacityvalue};
+          }else if(feature.properties.speed >= 10 && feature.properties.speed < 25){
+            return {color: "#f46d43", weight: feature.properties.RSDwidth  ,opacity: opacityvalue};
+          }else if(feature.properties.speed >= 25  && feature.properties.speed < 50 ){
+            return {color: "#fee08b", weight: feature.properties.RSDwidth ,opacity: opacityvalue};
+          }else if(feature.properties.speed >= 50 && feature.properties.speed < 75 ){
+            return {color: "#d9ef8b", weight: feature.properties.RSDwidth ,opacity: opacityvalue};
+          }else if(feature.properties.speed >= 75 && feature.properties.speed < 90 ){
+            return {color: "#66bd63", weight:feature.properties.RSDwidth ,opacity: opacityvalue};
+          }else if(feature.properties.speed >= 90 && feature.properties.speed < 115) {
+            return {color: "#1a9850", weight: feature.properties.RSDwidth ,opacity: opacityvalue};
+          }else if(feature.properties.speed >=  115 ){
+            return {color: "#006837", weight: feature.properties.RSDwidth ,opacity: opacityvalue};
+          }*/
+        }else{
+          //console.log(feature.properties.speed);
+        }
+}
+var clickedID;
+function onEachFeature(feature, layer) {
+      var popupContent = "<p>Road ID : " +
+          feature.properties.partitionID + " <br>Speed : "+ feature.properties.speed +  " <br>SD : "+ feature.properties.SD +   " <br> RSD : "+ feature.properties.RSDwidth +  " <br> Flow : "+ feature.properties.flow +"</p>";
+          layer.on("click",function(e){
+            graphDataProcess(dataset,feature.properties.partitionID);
+          })
+      
+      layer.bindPopup(popupContent);
+}       
+         
+
+
+//draw graph
 function addAxesAndLegend (svg, xAxis, yAxis, margin, chartWidth, chartHeight,exists) {
-  var legendWidth  = 200,
+  var legendWidth  = 100,
       legendHeight = 100;
 
   // clipping to make sure nothing appears behind legend
@@ -291,7 +446,7 @@ function graphDataProcess(dataset, roadID){
           graphdataset.push({"date": data.time, "minSpeed": temp.minSpeed, "lowSD" : (temp.speed - temp.SD),"speed" : temp.speed, "highSD" : (temp.speed + temp.SD),"maxSpeed" : temp.maxSpeed,"flow" : temp.flow})
         }
       });
-      console.log(themeriverdataset);
+      //console.log(themeriverdataset);
       data = graphdataset;
      
       makeChart(data);

@@ -27,6 +27,10 @@ $pois = array();
 <script src="js/poi_vis.js"></script>
 <script src="js/L.D3SvgOverlay.min.js"></script>
 <script src="js/colorbrewer.js"></script>
+<script src="js/app_modified.js"></script>
+<script src="js/themeriver.js"></script>
+<link href='css/graphstyle.css' rel='stylesheet' />
+<script src="roadnetwork.geojson"></script>
 <link href='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css' rel='stylesheet' />
 <link href='css/style.css' rel='stylesheet' />
 </head>
@@ -37,6 +41,23 @@ $pois = array();
 <span id="poi_category">
 
 </span>
+</div>
+<br><br><br><br><br><br><br><br>
+<div style="float:right;height:150;width:20%" id="timerange">
+<b>Select Time Range:</b><br>
+
+</div>
+<br><br><br><br><br><br><br><br>
+<div style="float:right;width:20%;height:50px" id="colors">
+
+</div>
+<br><br><br><br><br><br><br><br><br><br>
+<div style="float:right; width:20%; height:300px" id="graph">
+
+</div>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<div style="float:right; width:20%; height:300px" id="themeriver">
+
 </div>
 <script>
 L.mapbox.accessToken = 'pk.eyJ1IjoiYmVzZmllbGQiLCJhIjoiY2lneHoyY2Y1MHV3bTRwbTNtdjE5eHgzZiJ9.DPecCdxSkx44VQLXhaKmEg';
@@ -59,7 +80,7 @@ var pois = <?php echo json_encode($pois); ?>;//all the points from database
 //sample dataset
 drawPOI(pois,map,category_color,categories);
 
-
+drawRoadNetwork(map);
 
 </script>
 </body>

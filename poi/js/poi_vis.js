@@ -45,8 +45,12 @@ function drawCircles(data,map,category_id){
 	    .style("opacity",0.8)
 	    .attr('fill',function(d){return category_color[categories.indexOf(category_id)];})
 	    .on("click",function(d){
+	    	var object = {};
+	    	object['cx'] = d3.select(this).attr("cx");
+			object['cy'] = d3.select(this).attr("cy");
+			object['name'] = d[3];
 	      //update dataset
-	      readData(map,d[4]);
+	      readData(map,d[4],object);
 	  });
 	});
 	citiesOverlay.addTo(map);
@@ -67,27 +71,36 @@ function changeSelection(e){
 
 }
 
-function readData(map,gid){
+function readData(map,gid,object){
 	$.ajax({ url: "readData.php",
    						type: 'post',
                        data: {poi_id: gid},
                        dataType:'json',
                        success: function(data) {
                        		//sample = data;
-                       		drawHeatMap(map,gid,data);
+                       		drawHeatMap(map,gid,data,object);
                         }
    });
 }
 
 
-function drawHeatMap(map,gid,sample){
+function drawHeatMap(map,gid,sample,object){
    
   if(d3.select("svg").select("#heatmap")[0][0] != null){
     
-    d3.select("svg").select("#heatmap").remove();
+    d3.select("svg").select("#heatmap").attr("transform","translate("+ (object['cx']-100) +","+ (object['cy']-100) + ")").selectAll(".hour").data(sample);
+	d3.select("svg").select("#heatmap").select("#close").select("#name").text(object['name']);
+    return;
   }
-  var colorscale = d3.scale.quantile().range(colorbrewer.YlGnBu[9]).domain([0,30]);
-  var distancesclae = d3.scale.linear().range([0,30]).domain([0,8]);
+  var colorforscale = []
+  //colorforscale.push(colorbrewer.YlGnBu[9][0]);
+  colorforscale.push(colorbrewer.YlGnBu[9][2]);
+  colorforscale.push(colorbrewer.YlGnBu[9][3]);
+  colorforscale.push(colorbrewer.YlGnBu[9][4]);
+  colorforscale.push(colorbrewer.YlGnBu[9][5]);
+  colorforscale.push(colorbrewer.YlGnBu[9][7]);
+  var colorscale = d3.scale.quantile().range(colorforscale).domain([0,10,20]);
+  var distancesclae = d3.scale.linear().range([0,20]).domain([0,4]);
    var margin = { top: 50, right: 0, bottom: 100, left: 30 },
           gap = 50,
           width = 450 - margin.left - margin.right,
@@ -99,7 +112,7 @@ function drawHeatMap(map,gid,sample){
           //colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
           days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
           times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"];
-     var svg = d3.select("svg").append("g").attr("id","heatmap").attr("transform","translate(0,0)")//.attr("id","main-svg").attr("class","svg").attr("width", width + margin.left + margin.right)
+     var svg = d3.select("svg").append("g").attr("id","heatmap").attr("transform","translate("+ object['cx'] +","+ object['cy'] + ")")//.attr("id","main-svg").attr("class","svg").attr("width", width + margin.left + margin.right)
           //.attr("height", height + margin.top + margin.bottom)
           //.append("g");
     var background = svg.append("rect").attr("width",(width + 50)).attr("height",height).attr("x",0).attr("y",0).style("fill","white").style("opacity",0.9)
@@ -136,7 +149,7 @@ function drawHeatMap(map,gid,sample){
               	return colorscale((d * 60))});
       
       var colorrange = svg.append("g").selectAll(".rect")
-            .data(colorbrewer.YlGnBu[9])
+            .data(colorforscale)
             .enter()
             .append("rect")
             .attr("x", function(d, i) { return gap + legendElementWidth * i; })
@@ -145,7 +158,7 @@ function drawHeatMap(map,gid,sample){
             .attr("height", gridSize / 2)
             .style("fill", function(d, i) { return d; });
 
-      var colortext = svg.append("g").attr("transform","translate(" + gap + "," + (height - 10) + ")").selectAll(".mono").data(distance).enter().append("text")
+      var colortext = svg.append("g").attr("transform","translate(" + gap + "," + (height - 10) + ")").selectAll(".mono").data(colorforscale).enter().append("text")
             .attr("class", "mono")
             .text(function(d,i) { return  distancesclae(i); })
             .attr("x", function(d, i) { return  legendElementWidth * i; })
@@ -153,9 +166,10 @@ function drawHeatMap(map,gid,sample){
             .style("fill","black");
 
       //add close button on the right-top corner of heatmap
-      var closebutton = svg.append("g").on("click", function(d){return d3.select("#heatmap").remove();});
+      var closebutton = svg.append("g").attr("id","close").on("click", function(d){return d3.select("#heatmap").remove();});
       var close = closebutton.append("circle").attr("id","close").attr("cx",width + margin.left).attr("cy",20).attr("r",10).style("fill","grey").style("opacity",0.9);
       var closex = closebutton.append("text").attr("id","closex").attr("x",width + margin.left - 4).attr("y",25).text("X").style("fill","white");
+      var name = closebutton.append("text").attr("id","name").attr("x",margin.left - 4).attr("y",25).text(object['name']).style("fill","black");
 
 }
 //var svg = d3.select(map.getPanes().overlayPane).append("svg").attr("id","main-svg").attr("class","main-svg").style("width","100%");
